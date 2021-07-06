@@ -41,7 +41,6 @@ def retKML(ip):
             print("error in retKML()")
             return ''
     else:
-        print('local IP')
         return ''
 
 
@@ -52,23 +51,13 @@ def plotIPs(pcap):
             eth = dpkt.ethernet.Ethernet(buf)
             ip = eth.data
 
-            """
-            if(sys.getsizeof(ip.src)>37):
-                src = socket.inet_ntop(socket.AF_INET6, ip.src)
-            else:
-                src = socket.inet_ntoa(ip.src)
-
-            srcKML = retKML(src)
-            """
             if(sys.getsizeof(ip.dst)>37):
                 dst = socket.inet_ntop(socket.AF_INET6, ip.dst)
-                print('ipv6')
             else:
                 dst = socket.inet_ntoa(ip.dst)
 
             dstKML = retKML(dst)
 
-            #kmlPts = kmlPts + srcKML + dstKML
             kmlPts = kmlPts + dstKML
         except:
             print("error in plotIPs()")
@@ -81,13 +70,15 @@ def main():
 
     if(gIP==''):
         gIP = get('https://api.ipify.org').text
+    
+    print(f'Using {gIP} for the source IP')
 
     f = open('wireshark.pcap', 'rb')
     pcap = dpkt.pcap.Reader(f)
     
     kmlheader = '<?xml version="1.0" encoding="UTF-8"?> \n<kml xmlns="http://www.opengis.net/kml/2.2">\n<Document>\n'
     kmlfooter = '</Document>\n</kml>\n'
-    #kmldoc=kmlheader+plotIPs(pcap)+kmlfooter
+    kmldoc=kmlheader+plotIPs(pcap)+kmlfooter
     
     with open('googleMaps.kml', 'w') as f:
         f.write(kmldoc)
