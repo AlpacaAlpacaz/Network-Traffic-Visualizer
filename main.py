@@ -6,25 +6,36 @@ import sys
 gi = pygeoip.GeoIP('GeoLiteCity.dat')
 
 def retKML(ip):
-    rec = gi.record_by_name(ip)
-    if (rec != None):
+    if(ip[0:4]=='fe80'):
+        return''
+
+    dst = gi.record_by_name(ip)
+    src = gi.record_by_name('99.225.110.201')
+
+    if(dst != None):
         try:
-            longitude = rec['longitude']
-            latitude = rec['latitude']
+            dstLongitude = dst['longitude']
+            dstLatitude = dst['latitude']
+            srcLongitude = src['longitude']
+            srcLatitude = src['latitude']
+
             kml = (
                 '<Placemark>\n'
-                    '<name>%s</name>\n'
-                    '<Point>\n'
-                        '<coordinates>%6f,%6f</coordinates>\n'
-                    '</Point>\n'
+                    f'<name>{ip}</name>\n'
+                    '<extrude>1</extrude>\n'
+                    '<tessellate>1</tessellate>\n'
+                    '<styleUrl>#transBluePoly</styleUrl>\n'
+                    '<LineString>\n'
+                        f'<coordinates>{dstLongitude},{dstLatitude}\n{srcLongitude},{srcLatitude}</coordinates>\n'
+                    '</LineString>\n'
                 '</Placemark>\n'
-                )%(ip,longitude, latitude)
+            )
             return kml
         except:
             print("error in retKML()")
             return ''
     else:
-        print("local IP")
+        print('local IP')
         return ''
 
 
@@ -35,11 +46,18 @@ def plotIPs(pcap):
             eth = dpkt.ethernet.Ethernet(buf)
             ip = eth.data
 
-            size = sys.getsizeof(ip.src)
-            src = socket.inet_ntoa(ip.src)
+            if(sys.getsizeof(ip.src)>37):
+                src = socket.inet_ntop(socket.AF_INET6, ip.src)
+            else:
+                src = socket.inet_ntoa(ip.src)
+            
             srcKML = retKML(src)
 
-            dst = socket.inet_ntoa(ip.dst)
+            if(sys.getsizeof(ip.dst)>37):
+                dst = socket.inet_ntop(socket.AF_INET6, ip.dst)
+            else:
+                dst = socket.inet_ntoa(ip.dst)
+
             dstKML = retKML(dst)
 
             kmlPts = kmlPts + srcKML + dstKML
