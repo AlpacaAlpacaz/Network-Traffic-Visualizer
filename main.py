@@ -6,10 +6,13 @@ import sys
 gi = pygeoip.GeoIP('GeoLiteCity.dat')
 
 def retKML(ip):
-    if(ip[0:4]=='fe80'):
+    if(ip[0:4]=='fe80' or ip[0:3]=='ff0'):
         return''
-
-    dst = gi.record_by_name(ip)
+    
+    if(len(ip)>15):
+        dst = gi.record_by_addr(ip)
+    else:
+        dst = gi.record_by_name(ip)
     src = gi.record_by_name('99.225.110.201')
 
     if(dst != None):
@@ -46,21 +49,24 @@ def plotIPs(pcap):
             eth = dpkt.ethernet.Ethernet(buf)
             ip = eth.data
 
+            """
             if(sys.getsizeof(ip.src)>37):
                 src = socket.inet_ntop(socket.AF_INET6, ip.src)
             else:
                 src = socket.inet_ntoa(ip.src)
-            
-            srcKML = retKML(src)
 
+            srcKML = retKML(src)
+            """
             if(sys.getsizeof(ip.dst)>37):
                 dst = socket.inet_ntop(socket.AF_INET6, ip.dst)
+                print('ipv6')
             else:
                 dst = socket.inet_ntoa(ip.dst)
 
             dstKML = retKML(dst)
 
-            kmlPts = kmlPts + srcKML + dstKML
+            #kmlPts = kmlPts + srcKML + dstKML
+            kmlPts = kmlPts + dstKML
         except:
             print("error in plotIPs()")
     return kmlPts
