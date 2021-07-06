@@ -6,7 +6,7 @@ from requests import get
  
 gi = pygeoip.GeoIP('GeoLiteCity.dat')
 
-#Grabs 
+#Grabs the geo data for the IPs and creates a KML entry for it
 def retKML(ip):
     #Ignored Multicast and local IPV6
     if(ip[0:4]=='fe80' or ip[0:3]=='ff0'):
@@ -44,8 +44,8 @@ def retKML(ip):
 
 #Pulls the IPs from the pcap
 def plotIPs(pcap):
-    kmlPts = ''
     global style
+    kmlPts = ''
     for (ts, buf) in pcap:
         try:
             #Unpacks the Ethernet frame in the pcap
