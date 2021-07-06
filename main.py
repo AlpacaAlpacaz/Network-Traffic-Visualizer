@@ -29,7 +29,7 @@ def retKML(ip):
                     f'<name>{ip}</name>\n'
                     '<extrude>1</extrude>\n'
                     '<tessellate>1</tessellate>\n'
-                    '<styleUrl>#transBluePoly</styleUrl>\n'
+                    f'<styleUrl>{style}</styleUrl>\n'
                     '<LineString>\n'
                         f'<coordinates>{dstLongitude},{dstLatitude}\n{srcLongitude},{srcLatitude}</coordinates>\n'
                     '</LineString>\n'
@@ -45,6 +45,7 @@ def retKML(ip):
 #Pulls the IPs from the pcap
 def plotIPs(pcap):
     kmlPts = ''
+    global style
     for (ts, buf) in pcap:
         try:
             #Unpacks the Ethernet frame in the pcap
@@ -54,8 +55,10 @@ def plotIPs(pcap):
             #Converts the packed IP to decimal IP. ntop for ipv6 and ntoa for ipv4
             if(sys.getsizeof(ip.dst)>37):
                 dst = socket.inet_ntop(socket.AF_INET6, ip.dst)
+                style = '#prettyLines6'
             else:
                 dst = socket.inet_ntoa(ip.dst)
+                style = '#prettyLines4'
 
             dstKML = retKML(dst)
 
@@ -78,7 +81,21 @@ def main():
     f = open('wireshark.pcap', 'rb')
     pcap = dpkt.pcap.Reader(f)
     
-    kmlheader = '<?xml version="1.0" encoding="UTF-8"?> \n<kml xmlns="http://www.opengis.net/kml/2.2">\n<Document>\n'
+    kmlheader = '<?xml version="1.0" encoding="UTF-8"?> \n<kml xmlns="http://www.opengis.net/kml/2.2">\n<Document>\n' \
+        '<name>Network Traffic</name>\n' \
+        f'<description>A network traffic visualizer with the source of {gIP}</description>' \
+        '<Style id="prettyLines4">' \
+            '<LineStyle>' \
+                '<color>501400BE</color>' \
+                '<width>1</width>' \
+            '</LineStyle>' \
+        '</Style>' \
+        '<Style id="prettyLines6">' \
+            '<LineStyle>' \
+                '<color>50F06414</color>' \
+                '<width>1</width>' \
+            '</LineStyle>' \
+        '</Style>'
     kmlfooter = '</Document>\n</kml>\n'
     kmldoc=kmlheader+plotIPs(pcap)+kmlfooter
     
