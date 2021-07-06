@@ -2,6 +2,7 @@ import dpkt
 import socket
 import pygeoip
 import sys
+from requests import get
  
 gi = pygeoip.GeoIP('GeoLiteCity.dat')
 
@@ -13,7 +14,9 @@ def retKML(ip):
         dst = gi.record_by_addr(ip)
     else:
         dst = gi.record_by_name(ip)
-    src = gi.record_by_name('99.225.110.201')
+
+
+    src = gi.record_by_name(gIP)
 
     if(dst != None):
         try:
@@ -73,12 +76,18 @@ def plotIPs(pcap):
  
  
 def main():
+    global gIP 
+    gIP = input("Enter the source IP here or press ENTER to fetch it automatically using ipify.org: ")
+
+    if(gIP==''):
+        gIP = get('https://api.ipify.org').text
+
     f = open('wireshark.pcap', 'rb')
     pcap = dpkt.pcap.Reader(f)
     
     kmlheader = '<?xml version="1.0" encoding="UTF-8"?> \n<kml xmlns="http://www.opengis.net/kml/2.2">\n<Document>\n'
     kmlfooter = '</Document>\n</kml>\n'
-    kmldoc=kmlheader+plotIPs(pcap)+kmlfooter
+    #kmldoc=kmlheader+plotIPs(pcap)+kmlfooter
     
     with open('googleMaps.kml', 'w') as f:
         f.write(kmldoc)
